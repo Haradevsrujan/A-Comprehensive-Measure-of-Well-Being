@@ -1,6 +1,6 @@
 # 🌍 A Comprehensive Measure of Well-Being
 
-> An interactive Human Development Index (HDI) prediction and recommendation platform that evaluates a country's level of development using key socio-economic indicators and provides actionable insights for improvement.
+> An interactive Human Development Index (HDI) prediction and recommendation platform that evaluates a country's level of development using key socio-economic indicators and provides actionable insights for improvement which is useful for the researchers, organisations.
 
 ![HTML](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
