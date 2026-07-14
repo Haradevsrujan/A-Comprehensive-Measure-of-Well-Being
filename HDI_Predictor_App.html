@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HDI Predictor — Human Development Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B132B;
+    --panel:#141B33;
+    --panel-2:#1C2541;
+    --line:rgba(234,230,225,0.12);
+    --text:#EAE6E1;
+    --text-dim:#9CA3C4;
+    --gold:#E0A458;
+    --teal:#3A9188;
+    --low:#C0554A;
+    --medium:#E0A458;
+    --high:#4F9E8F;
+    --veryhigh:#4FD1A5;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1200px 600px at 15% -10%, rgba(224,164,88,0.08), transparent 60%),
+      radial-gradient(1000px 700px at 100% 10%, rgba(58,145,136,0.10), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    min-height:100vh;
+    padding:48px 24px 80px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  /* Header */
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--gold);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--gold);display:inline-block;}
+  h1{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:clamp(32px,5vw,52px);
+    line-height:1.05;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+  h1 em{color:var(--gold); font-style:normal;}
+  .lede{
+    font-size:16px;
+    line-height:1.6;
+    color:var(--text-dim);
+    max-width:640px;
+    margin:0 0 40px;
+  }
+
+  /* Layout */
+  .grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
+  }
+  @media (max-width:820px){ .grid{grid-template-columns:1fr;} }
+
+  .panel{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:28px 28px 30px;
+    position:relative;
+  }
+  .panel-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin:0 0 22px;
+    display:flex;
+    justify-content:space-between;
+  }
+  .panel-label span.idx{color:var(--gold);}
+
+  /* Sliders */
+  .field{margin-bottom:26px;}
+  .field:last-child{margin-bottom:0;}
+  .field-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:10px;
+  }
+  .field-name{font-size:14.5px; font-weight:500;}
+  .field-sub{font-size:11.5px; color:var(--text-dim); margin-top:2px;}
+  .field-value{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:15px;
+    color:var(--gold);
+    font-weight:500;
+  }
+  input[type=range]{
+    -webkit-appearance:none;
+    width:100%;
+    height:3px;
+    border-radius:2px;
+    background:rgba(234,230,225,0.18);
+    outline:none;
+    margin-top:4px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--gold);
+    border:3px solid var(--bg);
+    box-shadow:0 0 0 1px var(--gold);
+    cursor:pointer;
+    margin-top:-6.5px;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;border-radius:50%;
+    background:var(--gold);border:3px solid var(--bg);
+    box-shadow:0 0 0 1px var(--gold); cursor:pointer;
+  }
+  input[type=range]::-moz-range-track{height:3px;background:rgba(234,230,225,0.18);border-radius:2px;}
+
+  /* Result panel */
+  .tier-word{
+    font-family:'Source Serif 4', serif;
+    font-weight:700;
+    font-size:40px;
+    line-height:1;
+    margin:2px 0 6px;
+    transition:color .25s ease;
+  }
+  .score-row{display:flex; align-items:baseline; gap:10px; margin-bottom:22px;}
+  .score-num{font-family:'IBM Plex Mono', monospace; font-size:15px; color:var(--text-dim);}
+
+  /* Spectrum gauge */
+  .gauge{margin:18px 0 26px;}
+  .gauge-track{
+    position:relative;
+    height:10px;
+    border-radius:6px;
+    background:linear-gradient(90deg, var(--low) 0 32%, var(--medium) 32% 55%, var(--high) 55% 75%, var(--veryhigh) 75% 100%);
+  }
+  .gauge-marker{
+    position:absolute;
+    top:-6px;
+    width:2px;
+    height:22px;
+    background:var(--text);
+    transform:translateX(-1px);
+    transition:left .25s ease;
+  }
+  .gauge-marker::after{
+    content:"";
+    position:absolute;
+    top:-6px;left:-4px;
+    width:10px;height:10px;
+    border-radius:50%;
+    background:var(--text);
+  }
+  .gauge-ticks{
+    display:flex;
+    justify-content:space-between;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color:var(--text-dim);
+    margin-top:8px;
+  }
+
+  /* index breakdown bars */
+  .breakdown{margin-top:24px;}
+  .bd-row{margin-bottom:14px;}
+  .bd-row:last-child{margin-bottom:0;}
+  .bd-head{display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px; color:var(--text-dim);}
+  .bd-head b{color:var(--text); font-weight:500;}
+  .bd-track{height:6px; border-radius:4px; background:rgba(234,230,225,0.1); overflow:hidden;}
+  .bd-fill{height:100%; border-radius:4px; transition:width .25s ease; background:var(--teal);}
+
+  /* recommendation card */
+  .rec{
+    margin-top:24px;
+    padding:18px 20px;
+    border-left:2px solid var(--gold);
+    background:rgba(224,164,88,0.06);
+    border-radius:0 4px 4px 0;
+  }
+  .rec-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin-bottom:8px;
+  }
+  .rec-body{font-size:14px; line-height:1.55; color:var(--text);}
+  .rec-body b{color:var(--gold);}
+
+  footer{
+    max-width:1080px;
+    margin:56px auto 0;
+    color:var(--text-dim);
+    font-size:12px;
+    border-top:1px solid var(--line);
+    padding-top:20px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Ideation → Prototype</div>
+  <h1>Where does a nation stand,<br> and what would move it <em>forward</em>?</h1>
+  <p class="lede">Adjust life expectancy, education, and income per capita to see the resulting Human Development Index tier update in real time — with a targeted recommendation for the weakest indicator, based on the UNDP's official methodology.</p>
+
+  <div class="grid">
+    <!-- INPUT PANEL -->
+    <div class="panel">
+      <div class="panel-label">Indicators <span class="idx">01 / 03</span></div>
+
+      <div class="field">
+        <div class="field-head">
+          <div>
+            <div class="field-name">Life expectancy at birth</div>
+            <div class="field-sub">Years</div>
+          </div>
+          <div class="field-value" id="leVal">72.0</div>
+        </div>
+        <input type="range" id="le" min="20" max="85" step="0.5" value="72">
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <div>
+            <div class="field-name">Years of schooling</div>
+            <div class="field-sub">Average, mean/expected combined</div>
+          </div>
+          <div class="field-value" id="eduVal">8.0</div>
+        </div>
+        <input type="range" id="edu" min="0" max="15" step="0.2" value="8">
+      </div>
+
+      <div class="field">
+        <div class="field-head">
+          <div>
+            <div class="field-name">GNI per capita (PPP)</div>
+            <div class="field-sub">US$, log scale</div>
+          </div>
+          <div class="field-value" id="gniVal">$15,000</div>
+        </div>
+        <input type="range" id="gni" min="0" max="1000" step="1" value="580">
+      </div>
+    </div>
+
+    <!-- RESULT PANEL -->
+    <div class="panel">
+      <div class="panel-label">Prediction <span class="idx">Live</span></div>
+      <div class="tier-word" id="tierWord">High</div>
+      <div class="score-row">
+        <div class="score-num">HDI Score: <b id="scoreVal" style="color:var(--text)">0.000</b></div>
+      </div>
+
+      <div class="gauge">
+        <div class="gauge-track">
+          <div class="gauge-marker" id="marker" style="left:0%"></div>
+        </div>
+        <div class="gauge-ticks">
+          <span>0.000 Low</span>
+          <span>0.550</span>
+          <span>0.700</span>
+          <span>0.800 Very High</span>
+        </div>
+      </div>
+
+      <div class="breakdown">
+        <div class="bd-row">
+          <div class="bd-head"><span>Life Expectancy Index</span><b id="leiTxt">0.00</b></div>
+          <div class="bd-track"><div class="bd-fill" id="leiBar" style="width:0%; background:var(--gold)"></div></div>
+        </div>
+        <div class="bd-row">
+          <div class="bd-head"><span>Education Index</span><b id="eiTxt">0.00</b></div>
+          <div class="bd-track"><div class="bd-fill" id="eiBar" style="width:0%; background:var(--teal)"></div></div>
+        </div>
+        <div class="bd-row">
+          <div class="bd-head"><span>Income Index</span><b id="iiTxt">0.00</b></div>
+          <div class="bd-track"><div class="bd-fill" id="iiBar" style="width:0%; background:var(--high)"></div></div>
+        </div>
+      </div>
+
+      <div class="rec">
+        <div class="rec-label">Recommendation</div>
+        <div class="rec-body" id="recBody">Adjust the sliders to see a targeted improvement recommendation.</div>
+      </div>
+    </div>
+  </div>
+
+  <footer>HDI Predictor — prototype implementation · scoring formula follows the UNDP Human Development Report methodology (geometric mean of normalized Life Expectancy, Education, and Income indices)</footer>
+</div>
+
+<script>
+const le = document.getElementById('le');
+const edu = document.getElementById('edu');
+const gni = document.getElementById('gni');
+
+const leVal = document.getElementById('leVal');
+const eduVal = document.getElementById('eduVal');
+const gniVal = document.getElementById('gniVal');
+
+const tierWord = document.getElementById('tierWord');
+const scoreVal = document.getElementById('scoreVal');
+const marker = document.getElementById('marker');
+const recBody = document.getElementById('recBody');
+
+const leiTxt = document.getElementById('leiTxt'), leiBar = document.getElementById('leiBar');
+const eiTxt = document.getElementById('eiTxt'), eiBar = document.getElementById('eiBar');
+const iiTxt = document.getElementById('iiTxt'), iiBar = document.getElementById('iiBar');
+
+// GNI slider is 0-1000 mapped log-scale to $100 - $150,000
+const GNI_MIN = 100, GNI_MAX = 150000;
+function sliderToGni(s){
+  const t = s/1000;
+  return Math.round(Math.exp(Math.log(GNI_MIN) + t*(Math.log(GNI_MAX)-Math.log(GNI_MIN))));
+}
+function gniToSlider(v){
+  const t = (Math.log(v)-Math.log(GNI_MIN))/(Math.log(GNI_MAX)-Math.log(GNI_MIN));
+  return Math.round(t*1000);
+}
+
+const TIER_COLORS = {
+  "Low": "var(--low)",
+  "Medium": "var(--medium)",
+  "High": "var(--high)",
+  "Very High": "var(--veryhigh)"
+};
+
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+
+function computeIndices(LE, EDU, GNI){
+  const LEI = clamp01((LE - 20) / (85 - 20));
+  const EI  = clamp01(EDU / 15);
+  const II  = clamp01((Math.log(GNI) - Math.log(100)) / (Math.log(75000) - Math.log(100)));
+  return {LEI, EI, II};
+}
+
+function tierFromScore(score){
+  if (score >= 0.800) return "Very High";
+  if (score >= 0.700) return "High";
+  if (score >= 0.550) return "Medium";
+  return "Low";
+}
+
+function recommend(LE, EDU, GNI, idx){
+  const {LEI, EI, II} = idx;
+  const score = Math.cbrt(LEI*EI*II);
+  const tier = tierFromScore(score);
+
+  // find next threshold above current score
+  const thresholds = [0.550, 0.700, 0.800];
+  let next = thresholds.find(t => t > score);
+  if (!next){
+    return {text: `This scenario already sits in the <b>Very High</b> tier. All three indicators are performing strongly — the biggest further gains would come from continuing to raise whichever index is currently lowest.`, weakest: null};
+  }
+
+  // weakest index
+  const entries = [["Life Expectancy", LEI, "LEI"], ["Education", EI, "EI"], ["Income", II, "II"]];
+  entries.sort((a,b) => a[1]-b[1]);
+  const [name, val, key] = entries[0];
+
+  // required value of weakest index to hit `next`, holding others fixed
+  const others = entries.slice(1).reduce((p,c)=>p*c[1], 1);
+  let neededIdx = others > 0 ? Math.pow(next, 3) / others : 1;
+  neededIdx = clamp01(neededIdx);
+
+  let msg = "";
+  if (key === "LEI"){
+    const neededLE = 20 + neededIdx*(85-20);
+    msg = `Life expectancy is the weakest indicator. Raising it from <b>${LE.toFixed(1)} to about ${neededLE.toFixed(1)} years</b> (with education and income held constant) would be enough to cross into the <b>${tierFromScore(next)}</b> tier.`;
+  } else if (key === "EI"){
+    const neededEdu = neededIdx*15;
+    msg = `Education is the weakest indicator. Raising average years of schooling from <b>${EDU.toFixed(1)} to about ${neededEdu.toFixed(1)} years</b> (with life expectancy and income held constant) would be enough to cross into the <b>${tierFromScore(next)}</b> tier.`;
+  } else {
+    const neededGni = Math.round(Math.exp(Math.log(100) + neededIdx*(Math.log(75000)-Math.log(100))));
+    msg = `Income is the weakest indicator. Raising GNI per capita from <b>$${GNI.toLocaleString()} to about $${neededGni.toLocaleString()}</b> (with life expectancy and education held constant) would be enough to cross into the <b>${tierFromScore(next)}</b> tier.`;
+  }
+  return {text: msg, weakest: key};
+}
+
+function update(){
+  const LE = parseFloat(le.value);
+  const EDU = parseFloat(edu.value);
+  const GNI = sliderToGni(parseFloat(gni.value));
+
+  leVal.textContent = LE.toFixed(1);
+  eduVal.textContent = EDU.toFixed(1);
+  gniVal.textContent = "$" + GNI.toLocaleString();
+
+  const idx = computeIndices(LE, EDU, GNI);
+  const score = Math.cbrt(idx.LEI * idx.EI * idx.II);
+  const tier = tierFromScore(score);
+
+  tierWord.textContent = tier;
+  tierWord.style.color = TIER_COLORS[tier];
+  scoreVal.textContent = score.toFixed(3);
+
+  marker.style.left = (score*100).toFixed(1) + "%";
+
+  leiTxt.textContent = idx.LEI.toFixed(2); leiBar.style.width = (idx.LEI*100)+"%";
+  eiTxt.textContent  = idx.EI.toFixed(2);  eiBar.style.width  = (idx.EI*100)+"%";
+  iiTxt.textContent  = idx.II.toFixed(2);  iiBar.style.width  = (idx.II*100)+"%";
+
+  const rec = recommend(LE, EDU, GNI, idx);
+  recBody.innerHTML = rec.text;
+}
+
+[le, edu, gni].forEach(el => el.addEventListener('input', update));
+gni.value = gniToSlider(15000);
+update();
+</script>
+</body>
+</html>
